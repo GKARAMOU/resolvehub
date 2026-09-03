@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:resolvehub;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  kafka:
+    bootstrap-servers: localhost:65535
+
+app:
+  jwt:
+    issuer: resolvehub-test
+    secret: dGVzdC1zZWNyZXQta2V5LXRoYXQtaXMtYXQtbGVhc3QtMzItYnl0ZXMtbG9uZw==
+    ttl: PT1H
+  kafka:
+    enabled: false
+    topic: ticket.lifecycle.v1
+  demo-data:
+    enabled: false

@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: ResolveHub
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/resolvehub}
+    username: ${DATABASE_USER:resolvehub}
+    password: ${DATABASE_PASSWORD:resolvehub}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+server:
+  error:
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /docs
+
+app:
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:5173}
+  jwt:
+    issuer: resolvehub
+    secret: ${JWT_SECRET:cmVzb2x2ZWh1Yi1kZXZlbG9wbWVudC1zZWNyZXQta2VlcC1pdC1wcml2YXRl}
+    ttl: PT8H
+  kafka:
+    enabled: ${KAFKA_ENABLED:false}
+    topic: ticket.lifecycle.v1
+  demo-data:
+    enabled: ${DEMO_DATA_ENABLED:true}

@@ -1,0 +1,64 @@
+name: resolvehub
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: resolvehub
+      POSTGRES_USER: resolvehub
+      POSTGRES_PASSWORD: resolvehub
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resolvehub -d resolvehub"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redpanda:
+    image: redpandadata/redpanda:v24.3.11
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --node-id=0
+      - --check=false
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://redpanda:9092
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -q 'Healthy:.*true'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/resolvehub
+      DATABASE_USER: resolvehub
+      DATABASE_PASSWORD: resolvehub
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      KAFKA_ENABLED: "true"
+      JWT_SECRET: ${JWT_SECRET:-Y2hhbmdlLW1lLWJlZm9yZS1hLXJlYWwtZGVwbG95bWVudC1yZXNvbHZlaHVi}
+      CORS_ALLOWED_ORIGIN: http://localhost:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+
+  dashboard:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
